@@ -1,0 +1,34 @@
+name: Build and push Docker image
+
+# Runs automatically on every push to main
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: pull your repo's code onto the CI runner
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: authenticate to Docker Hub using the secrets you set up
+      # (the actual token value never appears in this file or in logs)
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Step 3: build the image and push it, tagged two ways:
+      # - the git commit SHA (unique, traceable back to exact code)
+      # - "latest" (convenient, but never deploy prod off this tag alone)
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/devops-project:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/devops-project:latest
